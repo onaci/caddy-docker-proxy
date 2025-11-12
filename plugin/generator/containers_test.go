@@ -99,7 +99,7 @@ func TestContainers_DifferentNetwork(t *testing.T) {
 
 func TestContainers_ManualIngressNetworks(t *testing.T) {
 	dockerClient := createBasicDockerClientMock()
-	dockerClient.NetworksData = []types.NetworkResource{
+	dockerClient.NetworksData = []network.Summary{
 		{
 			ID:   "other-network-id",
 			Name: "other-network-name",

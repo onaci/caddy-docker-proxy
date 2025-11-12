@@ -4,23 +4,26 @@ import (
 	"context"
 
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/events"
+	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/api/types/swarm"
+	"github.com/docker/docker/api/types/system"
 	"github.com/docker/docker/client"
 )
 
 // Client is an interface with needed functionalities from docker client
 type Client interface {
-	ContainerList(ctx context.Context, options types.ContainerListOptions) ([]types.Container, error)
+	ContainerList(ctx context.Context, options container.ListOptions) ([]types.Container, error)
 	ServiceList(ctx context.Context, options types.ServiceListOptions) ([]swarm.Service, error)
 	TaskList(ctx context.Context, options types.TaskListOptions) ([]swarm.Task, error)
-	Info(ctx context.Context) (types.Info, error)
+	Info(ctx context.Context) (system.Info, error)
 	ContainerInspect(ctx context.Context, containerID string) (types.ContainerJSON, error)
-	NetworkInspect(ctx context.Context, networkID string, options types.NetworkInspectOptions) (types.NetworkResource, error)
-	NetworkList(ctx context.Context, options types.NetworkListOptions) ([]types.NetworkResource, error)
+	NetworkInspect(ctx context.Context, networkID string, options network.InspectOptions) (network.Inspect, error)
+	NetworkList(ctx context.Context, options network.ListOptions) ([]network.Summary, error)
 	ConfigList(ctx context.Context, options types.ConfigListOptions) ([]swarm.Config, error)
 	ConfigInspectWithRaw(ctx context.Context, id string) (swarm.Config, []byte, error)
-	Events(ctx context.Context, options types.EventsOptions) (<-chan events.Message, <-chan error)
+	Events(ctx context.Context, options events.ListOptions) (<-chan events.Message, <-chan error)
 }
 
 // WrapClient creates a new docker client wrapper
@@ -34,7 +37,7 @@ type clientWrapper struct {
 	client *client.Client
 }
 
-func (wrapper *clientWrapper) ContainerList(ctx context.Context, options types.ContainerListOptions) ([]types.Container, error) {
+func (wrapper *clientWrapper) ContainerList(ctx context.Context, options container.ListOptions) ([]types.Container, error) {
 	return wrapper.client.ContainerList(ctx, options)
 }
 
@@ -50,7 +53,7 @@ func (wrapper *clientWrapper) ConfigList(ctx context.Context, options types.Conf
 	return wrapper.client.ConfigList(ctx, options)
 }
 
-func (wrapper *clientWrapper) Info(ctx context.Context) (types.Info, error) {
+func (wrapper *clientWrapper) Info(ctx context.Context) (system.Info, error) {
 	return wrapper.client.Info(ctx)
 }
 
@@ -58,11 +61,11 @@ func (wrapper *clientWrapper) ContainerInspect(ctx context.Context, containerID 
 	return wrapper.client.ContainerInspect(ctx, containerID)
 }
 
-func (wrapper *clientWrapper) NetworkInspect(ctx context.Context, networkID string, options types.NetworkInspectOptions) (types.NetworkResource, error) {
+func (wrapper *clientWrapper) NetworkInspect(ctx context.Context, networkID string, options network.InspectOptions) (network.Inspect, error) {
 	return wrapper.client.NetworkInspect(ctx, networkID, options)
 }
 
-func (wrapper *clientWrapper) NetworkList(ctx context.Context, options types.NetworkListOptions) ([]types.NetworkResource, error) {
+func (wrapper *clientWrapper) NetworkList(ctx context.Context, options network.ListOptions) ([]network.Summary, error) {
 	return wrapper.client.NetworkList(ctx, options)
 }
 
@@ -70,6 +73,6 @@ func (wrapper *clientWrapper) ConfigInspectWithRaw(ctx context.Context, id strin
 	return wrapper.client.ConfigInspectWithRaw(ctx, id)
 }
 
-func (wrapper *clientWrapper) Events(ctx context.Context, options types.EventsOptions) (<-chan events.Message, <-chan error) {
+func (wrapper *clientWrapper) Events(ctx context.Context, options events.ListOptions) (<-chan events.Message, <-chan error) {
 	return wrapper.client.Events(ctx, options)
 }

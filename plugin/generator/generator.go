@@ -11,6 +11,8 @@ import (
 	"time"
 
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/api/types/swarm"
 	"github.com/lucaslorentz/caddy-docker-proxy/plugin/v2/caddyfile"
 	"github.com/lucaslorentz/caddy-docker-proxy/plugin/v2/config"
@@ -179,7 +181,7 @@ func (g *CaddyfileGenerator) GenerateCaddyfile(logger *zap.Logger) ([]byte, []st
 	}
 
 	// Add containers
-	containers, err := g.dockerClient.ContainerList(context.Background(), types.ContainerListOptions{})
+	containers, err := g.dockerClient.ContainerList(context.Background(), container.ListOptions{})
 	if err == nil {
 		for _, container := range containers {
 			if _ /*serviceName */, isService := container.Labels["com.docker.swarm.service.id"]; isService {
@@ -280,7 +282,7 @@ func (g *CaddyfileGenerator) getIngressNetworks(logger *zap.Logger) (map[string]
 	ingressNetworks := map[string]bool{}
 
 	if len(g.options.IngressNetworks) > 0 {
-		networks, err := g.dockerClient.NetworkList(context.Background(), types.NetworkListOptions{})
+		networks, err := g.dockerClient.NetworkList(context.Background(), network.ListOptions{})
 		if err != nil {
 			return nil, err
 		}
@@ -305,15 +307,16 @@ func (g *CaddyfileGenerator) getIngressNetworks(logger *zap.Logger) (map[string]
 			return nil, err
 		}
 
-		for _, network := range container.NetworkSettings.Networks {
-			networkInfo, err := g.dockerClient.NetworkInspect(context.Background(), network.NetworkID, types.NetworkInspectOptions{})
+		for _, networkEndpoint := range container.NetworkSettings.Networks {
+			networkInfo, err := g.dockerClient.NetworkInspect(context.Background(), networkEndpoint.NetworkID, network.InspectOptions{})
 			if err != nil {
 				return nil, err
 			}
 			if networkInfo.Ingress {
 				continue
 			}
-			ingressNetworks[network.NetworkID] = true
+			ingressNetworks[networkInfo.ID] = true
+			ingressNetworks[networkInfo.Name] = true
 		}
 	}
 

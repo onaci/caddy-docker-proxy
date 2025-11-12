@@ -12,7 +12,7 @@ import (
 
 	"github.com/caddyserver/caddy/v2"
 	"github.com/caddyserver/caddy/v2/caddyconfig"
-	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/events"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
 	"github.com/lucaslorentz/caddy-docker-proxy/plugin/v2/config"
@@ -116,7 +116,7 @@ func (dockerLoader *DockerLoader) listenEvents() {
 
 	context, cancel := context.WithCancel(context.Background())
 
-	eventsChan, errorChan := dockerLoader.dockerClient.Events(context, types.EventsOptions{
+	eventsChan, errorChan := dockerLoader.dockerClient.Events(context, events.ListOptions{
 		Filters: args,
 	})
 
