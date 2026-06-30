@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"strings"
 	"text/template"
+
+	"github.com/Masterminds/sprig/v3"
 )
 
 var whitespaceRegex = regexp.MustCompile("\\s+")
@@ -72,7 +74,7 @@ func parsePath(path string) (string, int, string) {
 }
 
 func processVariables(data interface{}, funcs template.FuncMap, content string) (string, error) {
-	t, err := template.New("").Funcs(funcs).Parse(content)
+	t, err := template.New("").Funcs(sprig.TxtFuncMap()).Funcs(funcs).Parse(content)
 	if err != nil {
 		return "", err
 	}

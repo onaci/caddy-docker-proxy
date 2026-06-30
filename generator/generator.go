@@ -92,12 +92,16 @@ func (g *CaddyfileGenerator) GenerateCaddyfile(logger *zap.Logger) ([]byte, []st
 		if g.swarmIsAvailable[i] {
 			configs, err := dockerClient.ConfigList(context.Background(), client.ConfigListOptions{})
 			if err == nil {
+				caddyTemplateLabelName := strings.Join([]string{g.options.LabelPrefix, "template"}, ".")
 				for _, config := range configs {
-					if _, hasLabel := config.Spec.Labels[g.options.LabelPrefix]; hasLabel {
+					_, hasTemplateLabel := config.Spec.Labels[caddyTemplateLabelName]
+					_, hasLabel := config.Spec.Labels[g.options.LabelPrefix]
+					if hasTemplateLabel || hasLabel {
 						fullConfig, _, err := dockerClient.ConfigInspectWithRaw(context.Background(), config.ID)
 						if err != nil {
 							logger.Error("Failed to inspect Swarm Config", zap.String("config", config.Spec.Name), zap.Error(err))
-
+						} else if hasTemplateLabel {
+							NewTemplate(config.Spec.Name, string(fullConfig.Spec.Data))
 						} else {
 							block, err := caddyfile.Unmarshal(fullConfig.Spec.Data)
 							if err != nil {
@@ -169,6 +173,15 @@ func (g *CaddyfileGenerator) GenerateCaddyfile(logger *zap.Logger) ([]byte, []st
 					} else {
 						logger.Error("Failed to get Swarm service caddyfile", zap.String("service", service.Spec.Name), zap.Error(err))
 					}
+
+					// template files based config
+					containerTemplateCaddyfile, err := g.getServiceTemplatedCaddyfile(&service, logger)
+					if err == nil {
+						// logsBuffer.WriteString(fmt.Sprintf("[DEBUG] Swarm service caddy template %s\n", containerTemplateCaddyfile.Marshal()))
+						caddyfileBlock.Merge(containerTemplateCaddyfile)
+					} else {
+						logger.Error("Failed to generate templated Swarm service caddyfile", zap.String("service", service.Spec.Name), zap.Error(err))
+					}
 				}
 			} else {
 				logger.Error("Failed to get Swarm services", zap.Error(err))
@@ -204,6 +217,10 @@ func (g *CaddyfileGenerator) GenerateCaddyfile(logger *zap.Logger) ([]byte, []st
 	if len(caddyfileContent) == 0 {
 		caddyfileContent = []byte("# Empty caddyfile")
 	}
+
+	// TODO: make optional
+	// TODO: get the file location...
+	os.WriteFile("/config/caddy/docker-plugin.caddyfile", caddyfileContent, 0644)
 
 	// controlledServers lists only the remote servers discovered from labels.
 	// The loader pushes to the local in-process Caddy itself when this instance

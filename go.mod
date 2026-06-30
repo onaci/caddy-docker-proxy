@@ -5,6 +5,7 @@ go 1.26
 require (
 	github.com/Masterminds/sprig/v3 v3.3.0
 	github.com/caddyserver/caddy/v2 v2.11.4
+	github.com/fsnotify/fsnotify v1.9.0
 	github.com/joho/godotenv v1.5.1
 	github.com/stretchr/testify v1.11.1
 	go.uber.org/zap v1.28.0
