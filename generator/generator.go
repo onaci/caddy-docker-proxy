@@ -135,11 +135,21 @@ func (g *CaddyfileGenerator) GenerateCaddyfile(logger *zap.Logger) ([]byte, []st
 						}
 					}
 				}
+
+				// caddy. labels based config
 				containerCaddyfile, err := g.getContainerCaddyfile(&container, logger)
 				if err == nil {
 					caddyfileBlock.Merge(containerCaddyfile)
 				} else {
 					logger.Error("Failed to get Container Caddyfile", zap.String("container", container.ID), zap.Error(err))
+				}
+
+				// template files based config
+				containerTemplateCaddyfile, err := g.getContainerTemplatedCaddyfile(&container, logger)
+				if err == nil {
+					caddyfileBlock.Merge(containerTemplateCaddyfile)
+				} else {
+					logger.Error("Failed to get templated Container Caddyfile", zap.String("container", container.Names[0]), zap.Error(err))
 				}
 			}
 		} else {
