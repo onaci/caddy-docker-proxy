@@ -268,7 +268,7 @@ func setupTemplateDirWatcher(logger *zap.Logger) error {
 		logger.Error("watcher error", zap.String("dir", cleanRoot), zap.Error(err))
 		logger.Fatal("watcher error", zap.String("dir", cleanRoot), zap.Error(err))
 	}
-	logger.Info("Watching for updates to files ending with .tmp", zap.String("dir", cleanRoot))
+	logger.Info("Watching for updates to files ending with .tmpl", zap.String("dir", cleanRoot))
 
 	// Also need to read the existing files
 	err = filepath.Walk(cleanRoot, func(path string, info os.FileInfo, e1 error) error {
